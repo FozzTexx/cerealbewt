@@ -18,15 +18,9 @@ screen support, or keyboard support.
 
 ## Getting started
 
-In order to convince the Victor ROM to boot from serial, it must have
-no other boot devices available. That means that you need to unplug or
-remove any floppy drives, hard drives, or network cards. I found it
-was not necessary to unplug the 50 pin ribbon cable going to the
-floppy drives, unplugging the power cord was enough to disable them.
-
-You will also need to construct a special serial cable or adapter. I
-made a simple pass through adapter using male and female DB25
-connectors, wired according to the diagram below:
+You will need to construct a special serial cable or adapter. I made a
+simple pass through adapter using male and female DB25 connectors,
+wired according to the diagram below:
 
     Host 	       Victor
 
@@ -61,9 +55,7 @@ To boot the Victor over serial you need to connect your host computer
 to serial port A on the Victor (the DB25 connector closest to the
 video port) using the adapter or cable you made according to the above
 diagram. Power on the Victor and wait for it to finish the memory test
-and print the available memory on screen. It should not display any
-disk or network icons. If it does, turn off the Victor and disconnect
-them and try again.
+and print the available memory on screen.
 
 Once the memory size has been displayed, you can send over the stage 2
 bootloader followed by the monitor program:
