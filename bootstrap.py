@@ -28,7 +28,7 @@ def build_argparser():
   parser = argparse.ArgumentParser(formatter_class=argparse.ArgumentDefaultsHelpFormatter)
   parser.add_argument("serial", default="/dev/ttyUSB0", help="device to use as serial port")
   parser.add_argument("bootstrap", help="512 bytes to send over")
-  parser.add_argument("binary", help="file to send over after bootstrap")
+  parser.add_argument("binary", nargs="+", help="file(s) to send over after bootstrap")
   parser.add_argument("--loadpos",
                       help="load address of binary, default is to load at top of RAM")
   #parser.add_argument("--startpos", help="start address of binary")
@@ -77,6 +77,23 @@ def main():
                       timeout=1, rtscts=False, xonxoff=False, dsrdtr=False)
   ser.dtr = True
 
+  # Stack up binaries so that each one falls on an even paragraph
+  binaries = []
+  for path in args.binary:
+    with open(path, "rb") as file:
+      contents = file.read()
+      binaries.append([0, 0, contents])
+
+  binary = bytearray(0)
+  offset = 0
+  for section in binaries:
+    contents = section[2]
+    binary += contents
+    pad = ((len(contents) + 15) & 0xFFFF0) - len(contents)
+    binary += bytearray(pad)
+    section[1] = offset
+    offset += len(contents) + pad
+
   print("Waiting for Victor")
   waitForCTS(ser, True)
   eatGarbage(ser)
@@ -113,9 +130,6 @@ def main():
       print(echo, end="", flush=True)
       buffer += echo
 
-  with open(args.binary, "rb") as file:
-    binary = file.read()
-
   # By default tell cboot to load at top of RAM by setting segment to 0xFFFF
   dest = 0xFFFFFFFF
   if args.loadpos is not None:
@@ -133,7 +147,9 @@ def main():
 
   blen = len(binary)
 
-  print("Sending %s of length 0x%06x at 0x%06x" % (args.binary, blen, dest))
+  for idx, path in enumerate(args.binary):
+    print("Sending %s of length 0x%06x at offset 0x%06x"
+          % (path, len(binaries[idx][2]), binaries[idx][1]))
   sendUnsigned(ser, blen, 3)
   sendUnsigned(ser, dest, 4)
 
