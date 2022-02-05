@@ -10,7 +10,7 @@
 
 ;Start of Monitor code
 
-	ORG	01F800h
+	ORG	0000h
 	
 ; To select a disk boot, set one of the following equates
 ; to 1, the rest to 0.

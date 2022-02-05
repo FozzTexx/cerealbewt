@@ -110,6 +110,23 @@ getal:
 	add si,2
 	
 	mov ax,[dest+2]
+	cmp ax,0FFFFh
+	jnz nottop
+
+	;; change dest to be top of RAM minus length
+	xor ax,ax
+	mov [dest],ax
+	mov cx,4
+	mov ax,[length]
+	add ax,15		; round up to nearest paragraph
+	shr ax,cl
+	mov bx,[length+2]
+	shr bx,cl
+	add bx,ax
+	mov ax,[bvt+memsz]
+	sub ax,bx
+	mov [dest+2],ax
+nottop:	
 	call puthex16
 	add si,2
 
@@ -326,3 +343,31 @@ dest:	db 4 dup (0)		; Allow room for 4 byte segment:offset
 times ROMSIZE-($-$$) db 05Ah
 
 	bootend equ $
+
+	;; Victor ROM variables
+
+	struc	boot_table
+	memsz 	resw 1		; size of memory, in paragraphs
+	btdrv 	resw 1		; boot drive
+	dvclst	resw 2		; long pointer to list of devices
+	dvccbs	resw 2		; long pointer to device control blocks
+	nfatals	resw 2		; flag word for non-fatal errors
+	endstruc
+
+	struc 	load_request_block
+	op	resw 1		; Operation Code                       
+	dun	resw 1		; Device/Unit Number                   
+	da	resw 2		; Physical Address on Volume           
+	dma	resw 2		; Direct Memory Address                
+	blkcnt	resw 1		; Number of Blocks in Transfer         
+	status	resb 1		; STATUS code returned
+	ssz	resw 1		; Sector Size                          
+	laodaddr resw 1		; Segment to Load into - 0 => Load High
+	loadpara resw 1		; Paragraph Count                      
+	loadentry resw 2	; Entry Point - Seg=0 => Use "loadaddr"
+	endstruc	  
+			  
+	absolute 0300h
+
+bvt:	istruc boot_table
+lrb:	istruc load_request_block

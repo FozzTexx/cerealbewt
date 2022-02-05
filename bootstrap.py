@@ -29,7 +29,8 @@ def build_argparser():
   parser.add_argument("serial", default="/dev/ttyUSB0", help="device to use as serial port")
   parser.add_argument("bootstrap", help="512 bytes to send over")
   parser.add_argument("binary", help="file to send over after bootstrap")
-  parser.add_argument("--loadpos", default=0, help="load address of binary")
+  parser.add_argument("--loadpos",
+                      help="load address of binary, default is to load at top of RAM")
   #parser.add_argument("--startpos", help="start address of binary")
   parser.add_argument("--flag", action="store_true", help="flag to do something")
   return parser
@@ -115,7 +116,10 @@ def main():
   with open(args.binary, "rb") as file:
     binary = file.read()
 
-  dest = args.loadpos
+  # By default tell cboot to load at top of RAM by setting segment to 0xFFFF
+  dest = 0xFFFFFFFF
+  if args.loadpos is not None:
+    dest = args.loadpos
   if isinstance(dest, str):
     if ':' in dest:
       dso = dest.split(':')

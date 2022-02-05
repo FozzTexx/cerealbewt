@@ -24,13 +24,13 @@ wired according to the diagram below:
 
     Host 	       Victor
 
-     2  TX ────►  RX  3
-     3  RX ────►  TX  2
-     5 CTS ────►  RTS 4
-     7 GND ────►  GND 7
-    20 DTR ──┬─►  DSR 6
-             ├─►  RI 22
-             └─►  CD 8
+     2  TX ────▶  RX  3
+     3  RX ◀────  TX  2
+     5 CTS ◀────  RTS 4
+     7 GND ◀───▶  GND 7
+    20 DTR ──┬─▶  DSR 6
+             ├─▶  RI 22
+             └─▶  CD 8
 		  Victor ROM source says CD is
 		  needed but wasn't required in
 		  my testing
@@ -61,13 +61,8 @@ Once the memory size has been displayed, you can send over the stage 2
 bootloader followed by the monitor program:
 
 ```sh
-bootstrap.py bootstrap.py --loadpos 0x1f800 /dev/ttyUSB0 cboot.bin vicmon.bin
+bootstrap.py /dev/ttyUSB0 cboot.bin vicmon.bin
 ```
-
-All Victors have a minimum of 128k of RAM, so vicmon has been
-assembled to live at the top of the 128k (0x1f800). This should keep
-it mostly out of the way if you want to try to manually send over
-other programs.
 
 Once vicmon.bin has been sent over, bootstrap.py will enter a simple
 terminal mode so that you can interact with the [Seattle Computer
@@ -79,4 +74,3 @@ monitor](http://www.bitsavers.org/pdf/seattleComputer/SCP-300_MON-86_V1.5A.pdf).
 cboot.asm and bootstrap.py are distributed under GPL 2. vicmon.asm
 remains under the same license that Seattle Computer Products released
 MON-86 under ("This software is not copyrighted.").
-
