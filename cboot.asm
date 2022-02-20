@@ -22,13 +22,13 @@
 	IO_7201		equ 0E004h	; address of NEC 7201 registers
 	IO_6522		equ 0E804h	; address of 6522 registers
 	IO_8253		equ 0E002h	; address of Intel 8253 registers
-	
+
 	A_DATA		equ 0
 	A_CTL		equ 2
 	ERR_CHK		equ 000001b	; checks for receive errors
 	DATA_AVAIL	equ 1		; data available at the chip
 	ANY_ERRORS	equ 30h		; error status bits
-	
+
 	org 04000h
 
 start:
@@ -37,31 +37,31 @@ start:
 	;; mov ax,IO_7201
 	;; mov es,ax
 	;; call flushtx
-	
+
 	;; ;; Disable parity
 	;; mov byte [es:A_CTL],4
 	;; mov byte [es:A_CTL],01000100b
-	
+
 	;; change the baud rate
 	mov ax,IO_8253
 	mov es,ax
 	mov byte [es:3],36h
 	mov byte [es:0],04h	; 0004 = 19200  0041 = 1200
 	mov byte [es:0],0
-	
+
 	mov dx,SCREEN
 	mov es,dx
 	mov si,80*2
 
-	push si
-	mov cx,80*2*10		; Clear first 10 lines
-	mov ax,31
-clearscreen:	
-	mov [es:si],ax
-	inc si
-	loop clearscreen
-	pop si
-	
+;; 	push si
+;; 	mov cx,80*2*10		; Clear first 10 lines
+;; 	mov ax,31
+;; clearscreen:
+;; 	mov [es:si],ax
+;; 	inc si
+;; 	loop clearscreen
+;; 	pop si
+
 	;; Display all characters available in font
 	mov cx,80
 	xor ax,ax
@@ -89,7 +89,7 @@ allchars:
 	call putch
 	mov ax,29+32
 	call putch
-ready:	
+ready:
 	mov cx,rdylen
 	mov bx,rdy
 .loop:
@@ -108,7 +108,7 @@ getal:
 	loop getal
 
 	add si,2
-	
+
 	mov ax,[dest+2]
 	cmp ax,0FFFFh
 	jnz nottop
@@ -126,7 +126,7 @@ getal:
 	mov ax,[bvt+memsz]
 	sub ax,bx
 	mov [dest+2],ax
-nottop:	
+nottop:
 	call puthex16
 	add si,2
 
@@ -182,7 +182,7 @@ bootreloc:
 	call puthex16
 	mov ax,di
 	call puthex16
-	
+
 	mov ax,ds		; Download end segment
 	mov bx,di		; Download end offset
 	mov cx,4
@@ -191,7 +191,7 @@ bootreloc:
 	inc ax
 
 	push si			; save cursor position
-	
+
 	mov bx,cs
 	mov ds,bx		; source segment
 	lea si,start		; source offset
@@ -257,6 +257,9 @@ binmove:
 	;; mov ds:255*4+2,cx
 	;; int 255
 
+	;; Tell new OS that we booted from floppy 1 (right floppy)
+	mov byte [lrb+dun],1
+
 	;; Jump to binary by doing a far return
 	mov ax,[dest]
 	mov cx,[dest+2]
@@ -308,7 +311,7 @@ newline:
 readser:
 	mov ax,IO_7201
 	mov es,ax
-readwait:	
+readwait:
 	test [es:A_CTL],byte DATA_AVAIL
 	jz readwait
 
@@ -326,11 +329,11 @@ writeser:
 	mov es,ax
 	pop ax
 	mov [es:A_DATA],al
-flushtx:				
+flushtx:
 	test [es:A_CTL],byte 04h	; Wait for byte to transmit
 	jz flushtx
 	ret
-	
+
 msg:	db  15,0,2,2,18,19,14,24,25,24,25
 msglen	equ $-msg
 rdy:	db "READY",0dh,0ah
@@ -355,18 +358,18 @@ times ROMSIZE-($-$$) db 05Ah
 	endstruc
 
 	struc 	load_request_block
-	op	resw 1		; Operation Code                       
-	dun	resw 1		; Device/Unit Number                   
-	da	resw 2		; Physical Address on Volume           
-	dma	resw 2		; Direct Memory Address                
-	blkcnt	resw 1		; Number of Blocks in Transfer         
+	op	resw 1		; Operation Code
+	dun	resw 1		; Device/Unit Number
+	da	resw 2		; Physical Address on Volume
+	dma	resw 2		; Direct Memory Address
+	blkcnt	resw 1		; Number of Blocks in Transfer
 	status	resb 1		; STATUS code returned
-	ssz	resw 1		; Sector Size                          
+	ssz	resw 1		; Sector Size
 	laodaddr resw 1		; Segment to Load into - 0 => Load High
-	loadpara resw 1		; Paragraph Count                      
+	loadpara resw 1		; Paragraph Count
 	loadentry resw 2	; Entry Point - Seg=0 => Use "loadaddr"
-	endstruc	  
-			  
+	endstruc
+
 	absolute 0300h
 
 bvt:	istruc boot_table
