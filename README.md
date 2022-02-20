@@ -69,6 +69,12 @@ terminal mode so that you can interact with the [Seattle Computer
 Products
 monitor](http://www.bitsavers.org/pdf/seattleComputer/SCP-300_MON-86_V1.5A.pdf).
 
+## Extras
+
+* terminal.bas - This is a simple terminal program that was included in Victor documentation
+* hexrec.bas - A crude hack to receive binary data over the serial port and save it
+* hexsend.py - The matching program to hexrec which will send a binary as hexadecimal to the Victor
+
 ## License
 
 cboot.asm and bootstrap.py are distributed under GPL 2. vicmon.asm
