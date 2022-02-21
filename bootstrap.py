@@ -23,6 +23,7 @@ import select
 import termios, tty
 
 BOOTSTRAP_SIZE = 512
+AVERAGE_LEN = 100
 
 def build_argparser():
   parser = argparse.ArgumentParser(formatter_class=argparse.ArgumentDefaultsHelpFormatter)
@@ -111,7 +112,7 @@ def main():
       ser.write(bstrap[idx:idx+1])
       echo = ser.read(1)
 
-    if idx < 511 and (len(echo) == 0 or echo[0] != bstrap[idx]):
+    if idx < len(bstrap) - 1 and (len(echo) == 0 or echo[0] != bstrap[idx]):
       print("Bootstrap failed", idx, echo, "!=", hex(bstrap[idx]))
       return 1
 
@@ -154,10 +155,24 @@ def main():
   sendUnsigned(ser, dest, 4)
 
   err = 0
+  last = time.time()
+  average = 1 / (ser.baudrate / 10)
   for idx in range(blen):
+    now = time.time()
+    delta = now - last
+    average *= AVERAGE_LEN
+    average += delta
+    average /= AVERAGE_LEN + 1
     ser.write(binary[idx:idx+1])
     echo = ser.read(1)
-    print("Remain: %5i\r" % (blen - idx), end="", flush=True)
+    bytes_left = blen - idx
+    eta = bytes_left * average
+    hours, remainder = divmod(eta, 3600)
+    minutes, seconds = divmod(remainder, 60)
+    print("Remain: %5i  %02i:%02i:%02i  %4icps\r"
+          % (bytes_left, hours, minutes, seconds, int(1 / average)),
+          end="", flush=True)
+    last = now
     if len(echo) == 0 or echo[0] != binary[idx]:
       print("Send failed", idx, echo, "!=", hex(binary[idx]))
       err += 1

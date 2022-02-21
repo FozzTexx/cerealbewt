@@ -17,6 +17,9 @@
 
 import argparse
 import serial
+import time
+
+AVERAGE_LEN = 100
 
 def build_argparser():
   parser = argparse.ArgumentParser(formatter_class=argparse.ArgumentDefaultsHelpFormatter)
@@ -63,8 +66,31 @@ def main():
   lenstr = str(len(data)) + "\r"
   xmit_string(ser, lenstr)
 
-  for c in data:
+  print("\r", end="")
+  start = last = time.time()
+  blen = len(data)
+  average = 1 / (args.baud / 10)
+  for idx, c in enumerate(data):
+    now = time.time()
+    delta = now - last
+    average *= AVERAGE_LEN - 1
+    average += delta
+    average /= AVERAGE_LEN
     xmit_string(ser, "%02x" % (c))
+    bytes_left = blen - idx
+    eta = bytes_left * average
+    hours, remainder = divmod(eta, 3600)
+    minutes, seconds = divmod(remainder, 60)
+    print("Remain: %5i  %02i:%02i:%02i  %4icps\r"
+          % (bytes_left, hours, minutes, seconds, int(1 / average)),
+          end="", flush=True)
+    last = now
+
+  delta = now - start
+  hours, remainder = divmod(delta, 3600)
+  minutes, seconds = divmod(remainder, 60)
+  print()
+  print("Total time: %02i:%02i:%02i" % (hours, minutes, seconds))
 
   return
 
